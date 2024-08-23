@@ -1,100 +1,93 @@
-// xpath-click-generator.js
-
-// Function to handle clicks on elements and save XPath history
-document.body.addEventListener('click', function (event) {
-    // Prevent default action
-    event.preventDefault();
-
-    // Get the clicked element
-    const element = event.target;
-
-    // Generate XPath (this is a simple example, you may want to refine this)
-    const xpath = getXPath(element);
-    
-    // Generate corresponding C# code (you can modify this to fit your needs)
-    const csharpCode = generateCSharpCode(xpath);
-    
-    // Save XPath and C# code to history
-    saveXPathToHistory(xpath, csharpCode);
-});
-
-// Function to generate XPath
+// Function to generate XPath for a clicked element
 function getXPath(element) {
-    let xpath = '';
-    while (element) {
-        const tagName = element.tagName.toLowerCase();
-        const siblings = Array.from(element.parentNode.children);
-        const index = siblings.indexOf(element) + 1; // XPath index starts at 1
-        xpath = `${tagName}[${index}]${xpath ? '/' + xpath : ''}`;
-        element = element.parentNode;
+    if (element.id) {
+        return 'id("' + element.id + '")';
     }
-    return '/' + xpath;
-}
-
-// Function to generate C# code from XPath
-function generateCSharpCode(xpath) {
-    return `var element = driver.FindElement(By.XPath("${xpath}"));`;
-}
-
-// Function to save XPath and C# code to history
-function saveXPathToHistory(xpath, csharpCode) {
-    const history = JSON.parse(localStorage.getItem('xpathClickerHistory') || '[]');
-    history.push({
-        xpath: xpath,
-        csharpCode: csharpCode,
-        timestamp: Date.now()
-    });
-    localStorage.setItem('xpathClickerHistory', JSON.stringify(history));
-    displayXPathHistory();
-}
-
-// Function to display XPath history on the main page
-function displayXPathHistory() {
-    const historyContainer = document.getElementById('xpath-history');
-    const history = JSON.parse(localStorage.getItem('xpathClickerHistory') || '[]');
-
-    if (!historyContainer) {
-        console.error("History container not found!");
-        return;
+    if (element === document.body) {
+        return '/html/body';
     }
 
-    // Clear previous entries
-    historyContainer.innerHTML = '';
+    const ix = Array.from(element.parentNode.children).indexOf(element) + 1;
+    const tagName = element.tagName.toLowerCase();
+    return getXPath(element.parentNode) + '/' + tagName + '[' + ix + ']';
+}
 
-    if (history.length === 0) {
-        historyContainer.innerHTML = '<p>No XPaths recorded yet.</p>';
-        return;
-    }
+// Inject the necessary HTML and functionality
+(function() {
+    // Create the history container
+    var historyContainer = document.createElement('div');
+    historyContainer.id = 'xpath-history';
+    historyContainer.style.position = 'fixed';
+    historyContainer.style.bottom = '10px';
+    historyContainer.style.right = '10px';
+    historyContainer.style.backgroundColor = '#fff';
+    historyContainer.style.border = '1px solid #ccc';
+    historyContainer.style.padding = '10px';
+    historyContainer.style.zIndex = '9999';
+    historyContainer.style.maxHeight = '300px';
+    historyContainer.style.overflowY = 'auto';
+    document.body.appendChild(historyContainer);
 
-    history.forEach((entry) => {
-        const entryDiv = document.createElement('div');
-        entryDiv.className = 'xpath-entry';
-        entryDiv.innerHTML = `
-            <strong>XPath:</strong> <code>${entry.xpath}</code>
-            <button class="copy-btn" onclick="copyToClipboard('${entry.xpath}')">Copy XPath</button><br>
-            <strong>C# Code:</strong><br>
-            <code>${entry.csharpCode}</code>
-            <button class="copy-btn" onclick="copyToClipboard('${entry.csharpCode}')">Copy C# Code</button><br>
-            <small>Recorded: ${new Date(entry.timestamp).toLocaleString()}</small>
-            <hr>
-        `;
-        historyContainer.appendChild(entryDiv);
-    });
+    // Load XPath history from local storage
+    function displayXPathHistory() {
+        const history = JSON.parse(localStorage.getItem('xpathClickerHistory') || '[]');
 
-    // Set a timer to hide history after 20 seconds
-    setTimeout(() => {
+        if (history.length === 0) {
+            historyContainer.innerHTML = '<p>No XPaths recorded yet.</p>';
+            return;
+        }
+
+        // Limit displayed entries
+        const displayLimit = 5; // Change this to the desired limit
         historyContainer.innerHTML = '';
-    }, 3000);
-}
+        const recentEntries = history.slice(-displayLimit); // Get the last N entries
 
-// Function to copy text to clipboard
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        alert('Copied to clipboard!');
-    }).catch(err => {
-        console.error('Failed to copy: ', err);
+        recentEntries.forEach((entry) => {
+            const entryDiv = document.createElement('div');
+            entryDiv.className = 'xpath-entry';
+            entryDiv.innerHTML = `
+                <strong>XPath:</strong> <code>${entry.xpath}</code>
+                <button onclick="copyToClipboard('${entry.xpath}')">Copy XPath</button><br>
+                <strong>C# Code:</strong><br>
+                <code>${entry.csharpCode}</code>
+                <button onclick="copyToClipboard('${entry.csharpCode}')">Copy C# Code</button><br>
+                <small>Recorded: ${new Date(entry.timestamp).toLocaleString()}</small>
+            `;
+            historyContainer.appendChild(entryDiv);
+        });
+
+        // Remove the displayed history after 20 seconds
+        setTimeout(() => {
+            historyContainer.innerHTML = '';
+        }, 3000);
+    }
+
+    // Function to copy text to clipboard
+    window.copyToClipboard = function(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Copied to clipboard!');
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+        });
+    };
+
+    // Call the display function to show existing history
+    displayXPathHistory();
+
+    // Save XPath when an element is clicked
+    document.body.addEventListener('click', function(event) {
+        // Prevent the click event from propagating further
+        event.stopPropagation();
+
+        var xpath = getXPath(event.target);
+        var csharpCode = `driver.FindElement(By.XPath("${xpath}"));`; // Generate C# code
+
+        // Save to local storage
+        var history = JSON.parse(localStorage.getItem('xpathClickerHistory') || '[]');
+        history.push({ xpath: xpath, csharpCode: csharpCode, timestamp: Date.now() });
+        localStorage.setItem('xpathClickerHistory', JSON.stringify(history));
+
+        // Update history display
+        displayXPathHistory();
     });
-}
-
-// Call this function when the script loads to display existing history
-displayXPathHistory();
+})();
