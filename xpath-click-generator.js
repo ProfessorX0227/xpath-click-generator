@@ -21,9 +21,13 @@ function saveXPathToHistory(xpath, csharpCode) {
 function displayXPathHistory() {
     const STORAGE_KEY = 'xpathClickerHistory';
     const historyContainer = document.getElementById('xpath-history');
+
+    // Debugging log
+    console.log('History Container:', historyContainer);
+
     const history = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '[]');
 
-    if (historyContainer === null) {
+    if (!historyContainer) {
         console.error("Element with id 'xpath-history' not found.");
         return;
     }
@@ -34,7 +38,7 @@ function displayXPathHistory() {
     }
 
     historyContainer.innerHTML = '';
-    history.reverse().forEach((entry, index) => {
+    history.reverse().forEach((entry) => {
         const entryDiv = document.createElement('div');
         entryDiv.className = 'xpath-entry';
         entryDiv.innerHTML = `
@@ -48,7 +52,6 @@ function displayXPathHistory() {
         historyContainer.appendChild(entryDiv);
     });
 }
-
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
         alert('Copied to clipboard!');
