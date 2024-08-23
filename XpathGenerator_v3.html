@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="https://professorx0227.github.io/xpath-click-generator/style.css">
+  <base href="https://www.xpathclickerapp.com/" target="_blank">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Advanced XPath Clicker for generating C# XPath syntax.">
+  <title>Advanced XPath Clicker - Generate C# XPath Syntax</title>
+</head>
+<body>
+  <div class="container">
+    <h1>Advanced XPath Clicker for C#</h1>
+    <p>Drag this bookmarklet to your bookmarks bar:</p>
+    <a id="bookmarklet" href="javascript:(function(){
+      var script = document.createElement('script');
+      script.src = 'https://professorx0227.github.io/xpath-click-generator/xpath-click-generator.js';
+      script.onload = function() {
+        console.log('Script loaded successfully!');
+      };
+      script.onerror = function() {
+        console.error('Failed to load the script.');
+        alert('Error loading the XPath Clicker script.');
+      };
+      document.body.appendChild(script);
+    })();">Advanced XPath Clicker C#</a>
+
+    <div id="instructions">
+      <h3>Instructions:</h3>
+      <ol>
+        <li>Drag the "Advanced XPath Clicker C#" bookmarklet to your bookmarks bar.</li>
+        <li>Navigate to the webpage where you want to generate XPaths.</li>
+        <li>Click the bookmarklet to activate the XPath Clicker.</li>
+        <li>Click on any element on the page to generate its XPath in C# syntax.</li>
+        <li>All clicked XPaths will be recorded and can be viewed on this page.</li>
+        <li>You can use the bookmarklet in other tabs to generate XPaths across different pages.</li>
+      </ol>
+    </div>
+    
+    <div id="result">
+      <h3>XPath History:</h3>
+      <div id="xpath-history">
+        <!-- XPath history will be populated here -->
+      </div>
+    </div>
+    
+    <script>
+      // Display XPath history on the main page
+		function displayXPathHistory() {
+			const STORAGE_KEY = 'xpathClickerHistory';
+			const historyContainer = document.getElementById('xpath-history');
+			const history = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '[]');
+
+			if (history.length === 0) {
+				historyContainer.innerHTML = '<p>No XPaths recorded yet.</p>';
+				return;
+			}
+
+			historyContainer.innerHTML = '';
+			history.reverse().forEach((entry, index) => {
+				const entryDiv = document.createElement('div');
+				entryDiv.className = 'xpath-entry';
+				entryDiv.innerHTML = `
+					<strong>XPath:</strong> <code>${entry.xpath}</code>
+					<button class="copy-btn" onclick="copyToClipboard('${entry.xpath}')">Copy XPath</button><br>
+					<strong>C# Code:</strong><br>
+					<code>${entry.csharpCode}</code>
+					<button class="copy-btn" onclick="copyToClipboard('${entry.csharpCode}')">Copy C# Code</button><br>
+					<small>Recorded: ${new Date(entry.timestamp).toLocaleString()}</small>
+				`;
+				historyContainer.appendChild(entryDiv);
+			});
+		}
+
+		function copyToClipboard(text) {
+			navigator.clipboard.writeText(text).then(() => {
+				alert('Copied to clipboard!');
+			}).catch(err => {
+				console.error('Failed to copy: ', err);
+			});
+		}
+
+		// Call this function when the page loads
+		document.addEventListener('DOMContentLoaded', () => {
+			displayXPathHistory();
+		});
+
+    </script>
+  </div>
+</body>
+</html>
