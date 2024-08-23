@@ -31,16 +31,15 @@ function getXPath(element) {
     // Load XPath history from local storage
     function displayXPathHistory() {
         const history = JSON.parse(localStorage.getItem('xpathClickerHistory') || '[]');
-
         if (history.length === 0) {
             historyContainer.innerHTML = '<p>No XPaths recorded yet.</p>';
             return;
         }
-
+        
         // Limit displayed entries
-        const displayLimit = 5; // Change this to the desired limit
+        const displayLimit = 5;
         historyContainer.innerHTML = '';
-        const recentEntries = history.slice(-displayLimit); // Get the last N entries
+        const recentEntries = history.slice(-displayLimit);
 
         recentEntries.forEach((entry) => {
             const entryDiv = document.createElement('div');
@@ -76,18 +75,16 @@ function getXPath(element) {
 
     // Save XPath when an element is clicked
     document.body.addEventListener('click', function(event) {
-        // Prevent the click event from propagating further
         event.stopPropagation();
-
-        var xpath = getXPath(event.target);
-        var csharpCode = `driver.FindElement(By.XPath("${xpath}"));`; // Generate C# code
-
-        // Save to local storage
-        var history = JSON.parse(localStorage.getItem('xpathClickerHistory') || '[]');
-        history.push({ xpath: xpath, csharpCode: csharpCode, timestamp: Date.now() });
-        localStorage.setItem('xpathClickerHistory', JSON.stringify(history));
-
-        // Update history display
-        displayXPathHistory();
+        if (event.target && event.target instanceof HTMLElement) {
+            var xpath = getXPath(event.target);
+            var csharpCode = `driver.FindElement(By.XPath("${xpath}"));`;
+            var history = JSON.parse(localStorage.getItem('xpathClickerHistory') || '[]');
+            history.push({ xpath: xpath, csharpCode: csharpCode, timestamp: Date.now() });
+            localStorage.setItem('xpathClickerHistory', JSON.stringify(history));
+            displayXPathHistory();
+        } else {
+            console.error("Clicked target is not a valid HTML element.");
+        }
     });
 })();
