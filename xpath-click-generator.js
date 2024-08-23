@@ -1,6 +1,5 @@
 // Function to generate XPath for a clicked element
 function getXPath(element) {
-    // Generate the XPath of the given element
     if (element.id) {
         return 'id("' + element.id + '")';
     }
@@ -25,6 +24,8 @@ function getXPath(element) {
     historyContainer.style.border = '1px solid #ccc';
     historyContainer.style.padding = '10px';
     historyContainer.style.zIndex = '9999';
+    historyContainer.style.maxHeight = '300px';
+    historyContainer.style.overflowY = 'auto';
     document.body.appendChild(historyContainer);
 
     // Load XPath history from local storage
@@ -36,8 +37,12 @@ function getXPath(element) {
             return;
         }
 
+        // Limit displayed entries
+        const displayLimit = 5; // Change this to the desired limit
         historyContainer.innerHTML = '';
-        history.forEach((entry) => {
+        const recentEntries = history.slice(-displayLimit); // Get the last N entries
+
+        recentEntries.forEach((entry) => {
             const entryDiv = document.createElement('div');
             entryDiv.className = 'xpath-entry';
             entryDiv.innerHTML = `
@@ -50,6 +55,11 @@ function getXPath(element) {
             `;
             historyContainer.appendChild(entryDiv);
         });
+
+        // Remove the displayed history after 20 seconds
+        setTimeout(() => {
+            historyContainer.innerHTML = '';
+        }, 20000);
     }
 
     // Function to copy text to clipboard
